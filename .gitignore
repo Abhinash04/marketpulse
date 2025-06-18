@@ -1,16 +1,22 @@
 # Ignore API keys and local config
+.env
 config.js
 
 # Ignore OS/system files
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Ignore logs or temporary files
 *.log
 *.tmp
+*.bak
+*.orig
 
-# Ignore build or packaged zip files
+# Ignore build or packaged zip/crx files
 *.zip
+*.crx
+/dist/
 
 # Ignore node modules (if you ever add them)
 node_modules/
