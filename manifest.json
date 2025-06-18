@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Competitor Insights Scraper",
+  "name": "MarketPulse",
   "version": "1.0",
-  "description": "Scrapes competitor websites, summarizes content, and generates a PDF report.",
+  "description": "Turn web pages into strategy. Instantly scrape and summarize competitor news with AI-powered insights for smarter business decisions.",
   "permissions": [
     "activeTab",
     "scripting"

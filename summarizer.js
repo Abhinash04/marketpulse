@@ -29,13 +29,13 @@ async function summarizeContent(scrapedText) {
   Please use the exact format below, and be detailed in your explanations. Write in clear, concise paragraphs with specific examples or observations where relevant.
 
   **KEY INSIGHTS:**
-  [Identify every key insights about this competitor/website. These could include details about their product offerings, unique positioning, marketing strategies, customer focus, recent news/announcements, or innovation. Explain why each insight matters from a business perspective.]
+  [Identify 5 key insights about this competitor/website. These could include details about their product offerings, unique positioning, marketing strategies, customer focus, recent news/announcements, or innovation. Explain why each insight matters from a business perspective.]
   
   **MARKET SITUATION:**
   [Analyze what this content reveals about the broader market environment, including current trends, customer behaviors, regulatory shifts, emerging opportunities or risks, and how this competitor is responding. Offer context to help understand where this company fits within the competitive landscape.]
   
   **STRATEGIC SUGGESTIONS:**
-  [Provide every actionable and strategic recommendations for how we (the reader’s company) can respond or position ourselves in light of these insights. These should be practical and forward-looking, focusing on differentiation, customer value, or risk mitigation.]
+  [Provide 5 actionable and strategic recommendations for how we (the reader’s company) can respond or position ourselves in light of these insights. These should be practical and forward-looking, focusing on differentiation, customer value, or risk mitigation.]
   
   Website content to analyze:
   ${textToAnalyze}`;
