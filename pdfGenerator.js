@@ -1,69 +1,130 @@
-// pdfGenerator.js
-
-// This function is called by popup.js
-// It uses the jsPDF library to generate a PDF from the summary object.
-// Assumes jsPDF is loaded (e.g., via <script> tag in popup.html)
-
 function generatePdf(summary) {
-  // Ensure jsPDF is loaded
-  if (typeof jspdf === 'undefined') {
-    console.error('jsPDF library is not loaded.');
-    alert('Error: PDF generation library not found.');
+  console.log("=== PDF GENERATOR DEBUG START ===");
+  console.log("Received summary object:", summary);
+  console.log("Summary type:", typeof summary);
+  console.log("Summary keys:", Object.keys(summary || {}));
+  
+  if (typeof jspdf === "undefined") {
+    console.error("jsPDF library is not loaded.");
+    alert("Error: PDF generation library not found.");
     return;
   }
-  const { jsPDF } = jspdf; // Destructure from the global jspdf object
-
-  console.log("Generating PDF with summary:", summary);
+  const { jsPDF } = jspdf;
 
   try {
     const doc = new jsPDF();
     const margin = 15;
     let yPos = margin;
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const usableWidth = pageWidth - 2 * margin;
+    const lineHeight = 5;
+
+    // Helper function to add a new page if needed
+    function checkPageBreak(additionalHeight) {
+      if (yPos + additionalHeight > pageHeight - 20) {
+        doc.addPage();
+        yPos = margin;
+        return true;
+      }
+      return false;
+    }
+
+    // Helper function to add text with automatic page breaks
+    function addTextWithPageBreaks(text, fontSize, isBold = false) {
+      doc.setFontSize(fontSize);
+      if (isBold) {
+        doc.setFont(undefined, 'bold');
+      } else {
+        doc.setFont(undefined, 'normal');
+      }
+      
+      const lines = doc.splitTextToSize(text, usableWidth);
+      
+      for (let i = 0; i < lines.length; i++) {
+        checkPageBreak(lineHeight);
+        doc.text(lines[i], margin, yPos);
+        yPos += lineHeight;
+      }
+      
+      return lines.length;
+    }
 
     // Title
     doc.setFontSize(18);
-    doc.text("Competitor Analysis Report", pageWidth / 2, yPos, { align: 'center' });
+    doc.setFont(undefined, 'bold');
+    doc.text("Competitor Analysis Report", pageWidth / 2, yPos, {
+      align: "center",
+    });
     yPos += 15;
 
-    // Key Insights
-    doc.setFontSize(14);
-    doc.text("Key Insights:", margin, yPos);
-    yPos += 7;
+    // Add generation date
     doc.setFontSize(10);
-    let lines = doc.splitTextToSize(summary.keyInsights || "No specific insights generated.", usableWidth);
-    doc.text(lines, margin, yPos);
-    yPos += (lines.length * 5) + 10; // Adjust spacing based on number of lines
-
-    // Market Situation
-    doc.setFontSize(14);
-    doc.text("Market Situation:", margin, yPos);
-    yPos += 7;
-    doc.setFontSize(10);
-    lines = doc.splitTextToSize(summary.marketSituation || "General market conditions observed.", usableWidth);
-    doc.text(lines, margin, yPos);
-    yPos += (lines.length * 5) + 10;
-
-    // Strategic Suggestions
-    doc.setFontSize(14);
-    doc.text("Strategic Suggestions:", margin, yPos);
-    yPos += 7;
-    doc.setFontSize(10);
-    lines = doc.splitTextToSize(summary.strategicSuggestions || "Standard strategic considerations apply.", usableWidth);
-    doc.text(lines, margin, yPos);
-    yPos += (lines.length * 5) + 10;
-
-    // Add a footer with date
-    doc.setFontSize(8);
+    doc.setFont(undefined, 'normal');
     const today = new Date().toLocaleDateString();
-    doc.text(`Report generated on: ${today}`, margin, doc.internal.pageSize.getHeight() - 10);
+    doc.text(`Generated on: ${today}`, pageWidth / 2, yPos, {
+      align: "center",
+    });
+    yPos += 15;
 
-    doc.save("competitor_insights_report.pdf");
+    // Key Insights Section
+    checkPageBreak(20);
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text("Key Insights:", margin, yPos);
+    yPos += 10;
+    
+    const insightsText = summary.keyInsights || "No specific insights generated.";
+    console.log("PDF: Key Insights value:", insightsText);
+    console.log("PDF: Key Insights length:", insightsText.length);
+    console.log("PDF: Key Insights preview:", insightsText.substring(0, 100) + "...");
+    addTextWithPageBreaks(insightsText, 10);
+    yPos += 10;
 
+    // Market Situation Section
+    checkPageBreak(20);
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text("Market Situation:", margin, yPos);
+    yPos += 10;
+    
+    const marketText = summary.marketSituation || "General market conditions observed.";
+    console.log("Adding Market Situation:", marketText.substring(0, 100) + "...");
+    addTextWithPageBreaks(marketText, 10);
+    yPos += 10;
+
+    // Strategic Suggestions Section
+    checkPageBreak(20);
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text("Strategic Suggestions:", margin, yPos);
+    yPos += 10;
+    
+    const suggestionsText = summary.strategicSuggestions || "Standard strategic considerations apply.";
+    console.log("Adding Strategic Suggestions:", suggestionsText.substring(0, 100) + "...");
+    addTextWithPageBreaks(suggestionsText, 10);
+
+    // Footer on each page
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'normal');
+      doc.text(
+        `Page ${i} of ${totalPages}`,
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: "center" }
+      );
+    }
+
+    // Save the PDF
+    const filename = `competitor_insights_report_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(filename);
+    console.log(`PDF saved as: ${filename}`);
+    
   } catch (error) {
     console.error("Error generating PDF:", error);
-    alert("An error occurred while generating the PDF. Check the console.");
-    throw new Error("Failed to generate PDF. Check console for details.");
+    alert(`An error occurred while generating the PDF: ${error.message}`);
   }
 }

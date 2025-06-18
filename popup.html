@@ -1,45 +1,47 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Competitor Insights</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      width: 300px;
-      padding: 10px;
-    }
-    h1 {
-      font-size: 1.2em;
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      font-size: 1em;
-      cursor: pointer;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    #messageArea {
-      margin-top: 15px;
-      font-size: 0.9em;
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
-  <h1>Competitor Insights</h1>
-  <button id="scrapeButton">Scrape & Summarize</button>
-  <div id="messageArea"></div>
-  <script src="summarizer.js"></script>
-  <script src="lib/jspdf.min.js"></script>
-  <script src="pdfGenerator.js"></script>
-  <script src="popup.js"></script>
-</body>
+  <head>
+    <title>Competitor Insights</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        width: 300px;
+        padding: 10px;
+      }
+      h1 {
+        font-size: 1.2em;
+        text-align: center;
+        margin-bottom: 15px;
+      }
+      button {
+        width: 100%;
+        padding: 10px;
+        font-size: 1em;
+        cursor: pointer;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      #messageArea {
+        margin-top: 15px;
+        font-size: 0.9em;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Competitor Insights</h1>
+    <button id="scrapeButton">Scrape & Summarize</button>
+    <div id="messageArea"></div>
+    <script src="lib/jspdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="config.js"></script>
+    <script src="summarizer.js"></script>
+    <script src="pdfGenerator.js"></script>
+    <script src="popup.js"></script>
+  </body>
 </html>

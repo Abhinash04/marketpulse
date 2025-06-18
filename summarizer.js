@@ -1,40 +1,286 @@
-// summarizer.js
+async function summarizeContent(scrapedText) {
+  console.log("=== SUMMARIZER DEBUG START ===");
+  console.log("Input text length:", scrapedText.length);
+  console.log("Input text preview:", scrapedText.substring(0, 300));
 
-// This function is called by popup.js
-// It takes the scraped text and returns a mock summary object.
-// In a real scenario, this would involve an API call to an AI service.
-
-// Ensure this function is globally available if popup.html includes this script directly.
-function summarizeContent(scrapedText) {
-  console.log("Mock Summarizer: Processing text of length", scrapedText.length);
-
-  // Basic analysis (very simplified)
-  let insights = ["Competitor activity detected."];
-  let marketTrends = ["Market appears dynamic."];
-  let suggestions = ["Further analysis recommended."];
-
-  if (scrapedText.toLowerCase().includes("new product")) {
-    insights.push("Possible new product launch detected.");
-    suggestions.push("Investigate new product features and market reception.");
-  }
-  if (scrapedText.toLowerCase().includes("partnership")) {
-    insights.push("A new partnership may have been announced.");
-    marketTrends.push("Collaborations are increasing in the sector.");
-  }
-  if (scrapedText.toLowerCase().includes("pricing change") || scrapedText.toLowerCase().includes("discount")) {
-    insights.push("Potential pricing strategy shifts observed.");
-    suggestions.push("Review our pricing in response to competitor changes.");
-  }
-  if (scrapedText.toLowerCase().includes("sustainability") || scrapedText.toLowerCase().includes("eco-friendly")) {
-    marketTrends.push("Focus on sustainability is a key trend.");
+  if (typeof GEMINI_API_KEY === "undefined" || !GEMINI_API_KEY) {
+    console.error("GEMINI_API_KEY is not defined or empty");
+    alert("Gemini API key is not configured.");
+    return {
+      keyInsights: "No API key configured.",
+      marketSituation: "No API key configured.",
+      strategicSuggestions: "No API key configured.",
+    };
   }
 
-  // Simulate some processing delay (optional)
-  // for (let i = 0; i < 10000000; i++) { /* just a small delay */ }
+  console.log("API Key present:", GEMINI_API_KEY.substring(0, 20) + "...");
 
-  return {
-    keyInsights: insights.join(" "),
-    marketSituation: marketTrends.join(" "),
-    strategicSuggestions: suggestions.join(" ")
+  // Truncate very long text to avoid token limits
+  const maxLength = 8000; // Conservative limit
+  const textToAnalyze =
+    scrapedText.length > maxLength
+      ? scrapedText.substring(0, maxLength) +
+        "\n\n[Content truncated due to length]"
+      : scrapedText;
+
+  console.log("Text to analyze length:", textToAnalyze.length);
+
+  const prompt = `You are a business analyst. Analyze the following website content and provide a structured competitive analysis.
+
+Please respond with EXACTLY this format (use these exact headings):
+
+**KEY INSIGHTS:**
+[Provide 2-3 key insights about what this competitor is doing, their products/services, recent announcements, etc.]
+
+**MARKET SITUATION:**
+[Analyze what this content reveals about the current market trends, competitive landscape, or industry situation]
+
+**STRATEGIC SUGGESTIONS:**
+[Provide 2-3 actionable strategic recommendations based on your analysis]
+
+Website content to analyze:
+${textToAnalyze}`;
+
+  console.log("Prompt length:", prompt.length);
+
+  try {
+    console.log("Making API call to Gemini...");
+
+    const requestBody = {
+      contents: [
+        {
+          parts: [{ text: prompt }],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024,
+      },
+    };
+
+    console.log("Request body:", JSON.stringify(requestBody, null, 2));
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      }
+    );
+
+    console.log("Response status:", response.status);
+    console.log("Response headers:", [...response.headers.entries()]);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API Error Response:", errorText);
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${errorText}`
+      );
+    }
+
+    const data = await response.json();
+    console.log("Full API response:", JSON.stringify(data, null, 2));
+
+    // Check for API errors in response
+    if (data.error) {
+      console.error("API returned error:", data.error);
+      throw new Error(`API Error: ${data.error.message || "Unknown error"}`);
+    }
+
+    const summaryText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!summaryText) {
+      console.error("No text found in API response");
+      console.error("Candidates array:", data.candidates);
+      throw new Error("No text content in API response");
+    }
+
+    console.log("Raw summary text received:");
+    console.log("--- START SUMMARY ---");
+    console.log(summaryText);
+    console.log("--- END SUMMARY ---");
+
+    // Parse the response
+    const parsed = parseSummaryResponse(summaryText);
+
+    console.log("Parsed summary:", parsed);
+    console.log("=== SUMMARIZER DEBUG END ===");
+
+    return parsed;
+  } catch (error) {
+    console.error("Error in summarizeContent:", error);
+    console.error("Error stack:", error.stack);
+
+    return {
+      keyInsights: `Error: ${error.message}`,
+      marketSituation: `Error occurred while fetching analysis: ${error.message}`,
+      strategicSuggestions: `Unable to generate suggestions due to error: ${error.message}`,
+    };
+  }
+}
+
+function parseSummaryResponse(summaryText) {
+  console.log("=== PARSING SUMMARY ===");
+
+  const result = {
+    keyInsights: "",
+    marketSituation: "",
+    strategicSuggestions: "",
   };
+
+  // Clean up the text
+  const cleanText = summaryText.trim();
+
+  // Try multiple parsing strategies
+
+  // Strategy 1: Look for **BOLD** headers
+  const boldHeaderPatterns = {
+    keyInsights:
+      /\*\*KEY INSIGHTS?:?\*\*(.*?)(?=\*\*(?:MARKET SITUATION|STRATEGIC SUGGESTIONS)|$)/is,
+    marketSituation:
+      /\*\*MARKET SITUATION:?\*\*(.*?)(?=\*\*STRATEGIC SUGGESTIONS|$)/is,
+    strategicSuggestions: /\*\*STRATEGIC SUGGESTIONS?:?\*\*(.*?)$/is,
+  };
+
+  // Strategy 2: Look for regular headers
+  const regularHeaderPatterns = {
+    keyInsights:
+      /KEY INSIGHTS?:?\s*(.*?)(?=MARKET SITUATION|STRATEGIC SUGGESTIONS|$)/is,
+    marketSituation: /MARKET SITUATION:?\s*(.*?)(?=STRATEGIC SUGGESTIONS|$)/is,
+    strategicSuggestions: /STRATEGIC SUGGESTIONS?:?\s*(.*?)$/is,
+  };
+
+  // Strategy 3: Look for numbered sections
+  const numberedPatterns = {
+    keyInsights: /1\.?\s*KEY INSIGHTS?:?\s*(.*?)(?=2\.|MARKET SITUATION|$)/is,
+    marketSituation:
+      /2\.?\s*MARKET SITUATION:?\s*(.*?)(?=3\.|STRATEGIC SUGGESTIONS|$)/is,
+    strategicSuggestions: /3\.?\s*STRATEGIC SUGGESTIONS?:?\s*(.*?)$/is,
+  };
+
+  const strategies = [
+    boldHeaderPatterns,
+    regularHeaderPatterns,
+    numberedPatterns,
+  ];
+
+  for (let i = 0; i < strategies.length; i++) {
+    const patterns = strategies[i];
+    console.log(`Trying parsing strategy ${i + 1}...`);
+
+    for (const [key, pattern] of Object.entries(patterns)) {
+      if (!result[key]) {
+        // Only parse if we haven't found content yet
+        const match = cleanText.match(pattern);
+        if (match && match[1] && match[1].trim()) {
+          result[key] = match[1].trim();
+          console.log(
+            `Found ${key} with strategy ${i + 1}:`,
+            result[key].substring(0, 100)
+          );
+        }
+      }
+    }
+
+    // If we found all sections, we're done
+    if (
+      result.keyInsights &&
+      result.marketSituation &&
+      result.strategicSuggestions
+    ) {
+      console.log("All sections parsed successfully");
+      break;
+    }
+  }
+
+  // Strategy 4: If all else fails, try to split by common words and extract meaningful content
+  if (
+    !result.keyInsights ||
+    !result.marketSituation ||
+    !result.strategicSuggestions
+  ) {
+    console.log("Regex parsing failed, trying manual splitting...");
+
+    const lines = cleanText.split("\n").filter((line) => line.trim());
+    let currentSection = "";
+    let insights = [];
+    let market = [];
+    let suggestions = [];
+
+    for (const line of lines) {
+      const lowerLine = line.toLowerCase().trim();
+
+      if (
+        lowerLine.includes("key insights") ||
+        lowerLine.includes("insights:")
+      ) {
+        currentSection = "insights";
+        const afterColon = line.split(":")[1];
+        if (afterColon && afterColon.trim()) insights.push(afterColon.trim());
+      } else if (
+        lowerLine.includes("market situation") ||
+        lowerLine.includes("market:")
+      ) {
+        currentSection = "market";
+        const afterColon = line.split(":")[1];
+        if (afterColon && afterColon.trim()) market.push(afterColon.trim());
+      } else if (
+        lowerLine.includes("strategic") &&
+        lowerLine.includes("suggest")
+      ) {
+        currentSection = "suggestions";
+        const afterColon = line.split(":")[1];
+        if (afterColon && afterColon.trim())
+          suggestions.push(afterColon.trim());
+      } else if (line.trim() && !line.match(/^\*+$/) && currentSection) {
+        // Add content to current section
+        if (currentSection === "insights") insights.push(line.trim());
+        else if (currentSection === "market") market.push(line.trim());
+        else if (currentSection === "suggestions")
+          suggestions.push(line.trim());
+      }
+    }
+
+    if (!result.keyInsights && insights.length > 0) {
+      result.keyInsights = insights.join(" ");
+    }
+    if (!result.marketSituation && market.length > 0) {
+      result.marketSituation = market.join(" ");
+    }
+    if (!result.strategicSuggestions && suggestions.length > 0) {
+      result.strategicSuggestions = suggestions.join(" ");
+    }
+  }
+
+  // Final fallback - if we still have empty sections, use the whole response
+  if (!result.keyInsights) {
+    result.keyInsights =
+      "Unable to extract specific insights. Full response: " +
+      cleanText.substring(0, 200) +
+      "...";
+  }
+  if (!result.marketSituation) {
+    result.marketSituation =
+      "Unable to extract market situation. Please check console for full response.";
+  }
+  if (!result.strategicSuggestions) {
+    result.strategicSuggestions =
+      "Unable to extract strategic suggestions. Please check console for full response.";
+  }
+
+  console.log("Final parsed result:");
+  console.log("- Key Insights length:", result.keyInsights.length);
+  console.log("- Market Situation length:", result.marketSituation.length);
+  console.log(
+    "- Strategic Suggestions length:",
+    result.strategicSuggestions.length
+  );
+
+  return result;
 }
