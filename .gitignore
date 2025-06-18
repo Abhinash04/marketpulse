@@ -1,2 +1,21 @@
-# .gitignore
+# Ignore API keys and local config
 config.js
+
+# Ignore OS/system files
+.DS_Store
+Thumbs.db
+
+# Ignore logs or temporary files
+*.log
+*.tmp
+
+# Ignore build or packaged zip files
+*.zip
+
+# Ignore node modules (if you ever add them)
+node_modules/
+
+# Ignore IDE/editor settings
+.vscode/
+.idea/
+*.swp
