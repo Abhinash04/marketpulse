@@ -45,7 +45,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
           messageArea.textContent = 'Content scraped. Summarizing...';
           
-          // Check if summarizeContent function exists
           if (typeof summarizeContent !== 'function') {
             throw new Error('Summarizer function not available.');
           }
@@ -54,7 +53,6 @@ document.addEventListener('DOMContentLoaded', function () {
           const summary = await summarizeContent(scrapedData.text);
           console.log('Summary received:', summary);
 
-          // Validate that we got a proper summary
           if (!summary || typeof summary !== 'object') {
             throw new Error('Invalid summary object received from summarizeContent');
           }
@@ -66,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
           messageArea.textContent = 'Summarized. Generating PDF...';
           
-          // Check if generatePdf function exists
           if (typeof generatePdf !== 'function') {
             throw new Error('PDF generator function not available.');
           }

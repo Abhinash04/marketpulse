@@ -50,15 +50,13 @@ function generatePdf(summary) {
       return lines.length;
     }
 
-    // Title
     doc.setFontSize(18);
     doc.setFont(undefined, 'bold');
-    doc.text("Competitor Analysis Report", pageWidth / 2, yPos, {
+    doc.text("Analysis Report", pageWidth / 2, yPos, {
       align: "center",
     });
     yPos += 15;
 
-    // Add generation date
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
     const today = new Date().toLocaleDateString();
@@ -67,7 +65,6 @@ function generatePdf(summary) {
     });
     yPos += 15;
 
-    // Key Insights Section
     checkPageBreak(20);
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
@@ -81,7 +78,6 @@ function generatePdf(summary) {
     addTextWithPageBreaks(insightsText, 10);
     yPos += 10;
 
-    // Market Situation Section
     checkPageBreak(20);
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
@@ -93,7 +89,6 @@ function generatePdf(summary) {
     addTextWithPageBreaks(marketText, 10);
     yPos += 10;
 
-    // Strategic Suggestions Section
     checkPageBreak(20);
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
@@ -104,7 +99,6 @@ function generatePdf(summary) {
     console.log("Adding Strategic Suggestions:", suggestionsText.substring(0, 100) + "...");
     addTextWithPageBreaks(suggestionsText, 10);
 
-    // Footer on each page
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
@@ -118,8 +112,7 @@ function generatePdf(summary) {
       );
     }
 
-    // Save the PDF
-    const filename = `competitor_insights_report_${new Date().toISOString().split('T')[0]}.pdf`;
+    const filename = `insights_report_${new Date().toISOString().split('T')[0]}.pdf`;
     doc.save(filename);
     console.log(`PDF saved as: ${filename}`);
     

@@ -24,21 +24,21 @@ async function summarizeContent(scrapedText) {
 
   console.log("Text to analyze length:", textToAnalyze.length);
 
-  const prompt = `You are a business analyst. Analyze the following website content and provide a structured competitive analysis.
+  const prompt = `You are a business analyst with deep expertise in market research, strategic analysis, and competitive intelligence.
+  Analyze the following website content and provide a thorough, structured competitive analysis.
+  Please use the exact format below, and be detailed in your explanations. Write in clear, concise paragraphs with specific examples or observations where relevant.
 
-Please respond with EXACTLY this format (use these exact headings):
-
-**KEY INSIGHTS:**
-[Provide 2-3 key insights about what this competitor is doing, their products/services, recent announcements, etc.]
-
-**MARKET SITUATION:**
-[Analyze what this content reveals about the current market trends, competitive landscape, or industry situation]
-
-**STRATEGIC SUGGESTIONS:**
-[Provide 2-3 actionable strategic recommendations based on your analysis]
-
-Website content to analyze:
-${textToAnalyze}`;
+  **KEY INSIGHTS:**
+  [Identify every key insights about this competitor/website. These could include details about their product offerings, unique positioning, marketing strategies, customer focus, recent news/announcements, or innovation. Explain why each insight matters from a business perspective.]
+  
+  **MARKET SITUATION:**
+  [Analyze what this content reveals about the broader market environment, including current trends, customer behaviors, regulatory shifts, emerging opportunities or risks, and how this competitor is responding. Offer context to help understand where this company fits within the competitive landscape.]
+  
+  **STRATEGIC SUGGESTIONS:**
+  [Provide every actionable and strategic recommendations for how we (the reader’s company) can respond or position ourselves in light of these insights. These should be practical and forward-looking, focusing on differentiation, customer value, or risk mitigation.]
+  
+  Website content to analyze:
+  ${textToAnalyze}`;
 
   console.log("Prompt length:", prompt.length);
 
@@ -104,7 +104,6 @@ ${textToAnalyze}`;
     console.log(summaryText);
     console.log("--- END SUMMARY ---");
 
-    // Parse the response
     const parsed = parseSummaryResponse(summaryText);
 
     console.log("Parsed summary:", parsed);
@@ -132,12 +131,7 @@ function parseSummaryResponse(summaryText) {
     strategicSuggestions: "",
   };
 
-  // Clean up the text
   const cleanText = summaryText.trim();
-
-  // Try multiple parsing strategies
-
-  // Strategy 1: Look for **BOLD** headers
   const boldHeaderPatterns = {
     keyInsights:
       /\*\*KEY INSIGHTS?:?\*\*(.*?)(?=\*\*(?:MARKET SITUATION|STRATEGIC SUGGESTIONS)|$)/is,
@@ -146,7 +140,6 @@ function parseSummaryResponse(summaryText) {
     strategicSuggestions: /\*\*STRATEGIC SUGGESTIONS?:?\*\*(.*?)$/is,
   };
 
-  // Strategy 2: Look for regular headers
   const regularHeaderPatterns = {
     keyInsights:
       /KEY INSIGHTS?:?\s*(.*?)(?=MARKET SITUATION|STRATEGIC SUGGESTIONS|$)/is,
@@ -154,7 +147,6 @@ function parseSummaryResponse(summaryText) {
     strategicSuggestions: /STRATEGIC SUGGESTIONS?:?\s*(.*?)$/is,
   };
 
-  // Strategy 3: Look for numbered sections
   const numberedPatterns = {
     keyInsights: /1\.?\s*KEY INSIGHTS?:?\s*(.*?)(?=2\.|MARKET SITUATION|$)/is,
     marketSituation:
@@ -174,7 +166,6 @@ function parseSummaryResponse(summaryText) {
 
     for (const [key, pattern] of Object.entries(patterns)) {
       if (!result[key]) {
-        // Only parse if we haven't found content yet
         const match = cleanText.match(pattern);
         if (match && match[1] && match[1].trim()) {
           result[key] = match[1].trim();
@@ -186,7 +177,6 @@ function parseSummaryResponse(summaryText) {
       }
     }
 
-    // If we found all sections, we're done
     if (
       result.keyInsights &&
       result.marketSituation &&
@@ -197,7 +187,6 @@ function parseSummaryResponse(summaryText) {
     }
   }
 
-  // Strategy 4: If all else fails, try to split by common words and extract meaningful content
   if (
     !result.keyInsights ||
     !result.marketSituation ||
@@ -237,7 +226,6 @@ function parseSummaryResponse(summaryText) {
         if (afterColon && afterColon.trim())
           suggestions.push(afterColon.trim());
       } else if (line.trim() && !line.match(/^\*+$/) && currentSection) {
-        // Add content to current section
         if (currentSection === "insights") insights.push(line.trim());
         else if (currentSection === "market") market.push(line.trim());
         else if (currentSection === "suggestions")
@@ -256,7 +244,6 @@ function parseSummaryResponse(summaryText) {
     }
   }
 
-  // Final fallback - if we still have empty sections, use the whole response
   if (!result.keyInsights) {
     result.keyInsights =
       "Unable to extract specific insights. Full response: " +
