@@ -15,8 +15,7 @@ async function summarizeContent(scrapedText) {
 
   console.log("API Key present:", GEMINI_API_KEY.substring(0, 20) + "...");
 
-  // Truncate very long text to avoid token limits
-  const maxLength = 8000; // Conservative limit
+  const maxLength = 8000;
   const textToAnalyze =
     scrapedText.length > maxLength
       ? scrapedText.substring(0, maxLength) +
@@ -87,7 +86,6 @@ ${textToAnalyze}`;
     const data = await response.json();
     console.log("Full API response:", JSON.stringify(data, null, 2));
 
-    // Check for API errors in response
     if (data.error) {
       console.error("API returned error:", data.error);
       throw new Error(`API Error: ${data.error.message || "Unknown error"}`);
