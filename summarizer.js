@@ -1,4 +1,4 @@
-async function summarizeContent(scrapedText) {
+async function summarizeContent(scrapedText, siteName) {
   console.log("=== SUMMARIZER DEBUG START ===");
   console.log("Input text length:", scrapedText.length);
   console.log("Input text preview:", scrapedText.substring(0, 300));
@@ -27,6 +27,7 @@ async function summarizeContent(scrapedText) {
   const prompt = `You are a business analyst with deep expertise in market research, strategic analysis, and competitive intelligence.
   Analyze the following website content and provide a thorough, structured competitive analysis.
   Please use the exact format below, and be detailed in your explanations. Write in clear, concise paragraphs with specific examples or observations where relevant.
+  **NAME OF THE SITE:** ${siteName}
 
   **KEY INSIGHTS:**
   [Identify 5 key insights about this competitor/website. These could include details about their product offerings, unique positioning, marketing strategies, customer focus, recent news/announcements, or innovation. Explain why each insight matters from a business perspective.]
@@ -109,7 +110,7 @@ async function summarizeContent(scrapedText) {
     console.log("Parsed summary:", parsed);
     console.log("=== SUMMARIZER DEBUG END ===");
 
-    return parsed;
+    return { ...parsed, siteName };
   } catch (error) {
     console.error("Error in summarizeContent:", error);
     console.error("Error stack:", error.stack);

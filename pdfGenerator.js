@@ -52,7 +52,7 @@ function generatePdf(summary) {
 
     doc.setFontSize(18);
     doc.setFont(undefined, 'bold');
-    doc.text("Analysis Report", pageWidth / 2, yPos, {
+    doc.text(`${summary.siteName || "Unknown"} Analysis Report`, pageWidth / 2, yPos, {
       align: "center",
     });
     yPos += 15;

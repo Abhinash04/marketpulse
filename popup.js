@@ -50,7 +50,10 @@ document.addEventListener('DOMContentLoaded', function () {
           }
 
           console.log('Calling summarizeContent...');
-          const summary = await summarizeContent(scrapedData.text);
+          
+          const siteName = new URL(activeTab.url).hostname;
+          const summary = await summarizeContent(scrapedData.text, siteName);
+          // const summary = await summarizeContent(scrapedData.text);
           console.log('Summary received:', summary);
 
           if (!summary || typeof summary !== 'object') {
